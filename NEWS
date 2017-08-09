@@ -1,3 +1,39 @@
+etcd v3.2.5 (2017-08-04)
+- use reverse lookup to match wildcard DNS SAN
+- return non-zero exit code on unhealthy 'endpoint health'
+- fix unreachable /metrics endpoint when '--enable-v2=false'
+- fix grpcproxy to respect 'PrevKv' flag
+- add container registry 'gcr.io/etcd-development/etcd'
+
+etcd v3.2.4 (2017-07-19)
+- do not block on active client stream when stopping server
+- fix gRPC proxy Snapshot RPC error handling
+
+etcd v3.2.3 (2017-07-14)
+- let clients establish unlimited streams
+- add docker tags for minor versions
+  e.g. docker pull quay.io/coreos/etcd:v3.2 to fetch latest v3.2 versions
+
+etcd v3.1.10 (2017-07-14)
+- use Go 1.8.3 to fix panic on net/http.CloseNotify
+- add docker tags for minor versions
+  e.g. docker pull quay.io/coreos/etcd:v3.1 to fetch latest v3.1 versions
+
+etcd v3.2.2 (2017-07-07)
+- rate-limit lease revoke on expiration
+- extend leases on promote to avoid queueing effect on lease expiration
+- use user-provided listen address to connect to gRPC gateway
+  - net.Listener rewrites IPv4 0.0.0.0 to IPv6 [::], breaking IPv6 disabled hosts
+  - only v3.2.0, v3.2.1 are affected
+- accept connection with matched IP SAN but no DNS match
+  - don't check DNS entries in certs if there's a matching IP
+- fix 'tools/benchmark' watch command
+
+etcd v3.2.1 (2017-06-23)
+- fix backend database in-memory index corruption issue on restore (only 3.2.0 is affected)
+- fix gRPC gateway Txn marshaling issue
+- fix backend database size debugging metrics
+
 etcd v3.2.0 (2017-06-09)
 - improved backend read concurrency
 - embedded etcd

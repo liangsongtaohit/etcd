@@ -20,6 +20,7 @@ import (
 
 	v3 "github.com/coreos/etcd/clientv3"
 	pb "github.com/coreos/etcd/etcdserver/etcdserverpb"
+	"github.com/coreos/etcd/pkg/types"
 )
 
 type simplePrinter struct {
@@ -135,11 +136,22 @@ func (s *simplePrinter) EndpointStatus(statusList []epStatus) {
 	}
 }
 
+func (s *simplePrinter) EndpointHashKV(hashList []epHashKV) {
+	_, rows := makeEndpointHashKVTable(hashList)
+	for _, row := range rows {
+		fmt.Println(strings.Join(row, ", "))
+	}
+}
+
 func (s *simplePrinter) DBStatus(ds dbstatus) {
 	_, rows := makeDBStatusTable(ds)
 	for _, row := range rows {
 		fmt.Println(strings.Join(row, ", "))
 	}
+}
+
+func (s *simplePrinter) MoveLeader(leader, target uint64, r v3.MoveLeaderResponse) {
+	fmt.Printf("Leadership transferred from %s to %s\n", types.ID(leader), types.ID(target))
 }
 
 func (s *simplePrinter) RoleAdd(role string, r v3.AuthRoleAddResponse) {

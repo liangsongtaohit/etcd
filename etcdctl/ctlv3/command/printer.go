@@ -43,6 +43,8 @@ type printer interface {
 	MemberList(v3.MemberListResponse)
 
 	EndpointStatus([]epStatus)
+	EndpointHashKV([]epHashKV)
+	MoveLeader(leader, target uint64, r v3.MoveLeaderResponse)
 
 	Alarm(v3.AlarmResponse)
 	DBStatus(dbstatus)
@@ -104,7 +106,9 @@ func (p *printerRPC) MemberUpdate(id uint64, r v3.MemberUpdateResponse) {
 }
 func (p *printerRPC) MemberList(r v3.MemberListResponse) { p.p((*pb.MemberListResponse)(&r)) }
 func (p *printerRPC) Alarm(r v3.AlarmResponse)           { p.p((*pb.AlarmResponse)(&r)) }
-
+func (p *printerRPC) MoveLeader(leader, target uint64, r v3.MoveLeaderResponse) {
+	p.p((*pb.MoveLeaderResponse)(&r))
+}
 func (p *printerRPC) RoleAdd(_ string, r v3.AuthRoleAddResponse) { p.p((*pb.AuthRoleAddResponse)(&r)) }
 func (p *printerRPC) RoleGet(_ string, r v3.AuthRoleGetResponse) { p.p((*pb.AuthRoleGetResponse)(&r)) }
 func (p *printerRPC) RoleDelete(_ string, r v3.AuthRoleDeleteResponse) {
@@ -143,7 +147,10 @@ func newPrinterUnsupported(n string) printer {
 }
 
 func (p *printerUnsupported) EndpointStatus([]epStatus) { p.p(nil) }
+func (p *printerUnsupported) EndpointHashKV([]epHashKV) { p.p(nil) }
 func (p *printerUnsupported) DBStatus(dbstatus)         { p.p(nil) }
+
+func (p *printerUnsupported) MoveLeader(leader, target uint64, r v3.MoveLeaderResponse) { p.p(nil) }
 
 func makeMemberListTable(r v3.MemberListResponse) (hdr []string, rows [][]string) {
 	hdr = []string{"ID", "Status", "Name", "Peer Addrs", "Client Addrs"}
@@ -174,6 +181,17 @@ func makeEndpointStatusTable(statusList []epStatus) (hdr []string, rows [][]stri
 			fmt.Sprint(status.Resp.Leader == status.Resp.Header.MemberId),
 			fmt.Sprint(status.Resp.RaftTerm),
 			fmt.Sprint(status.Resp.RaftIndex),
+		})
+	}
+	return
+}
+
+func makeEndpointHashKVTable(hashList []epHashKV) (hdr []string, rows [][]string) {
+	hdr = []string{"endpoint", "hash"}
+	for _, h := range hashList {
+		rows = append(rows, []string{
+			h.Ep,
+			fmt.Sprint(h.Resp.Hash),
 		})
 	}
 	return

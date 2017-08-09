@@ -858,15 +858,15 @@
         "tags": [
           "Maintenance"
         ],
-        "summary": "Hash returns the hash of the local KV state for consistency checking purpose.\nThis is designed for testing; do not use this in production when there\nare ongoing transactions.",
-        "operationId": "Hash",
+        "summary": "HashKV computes the hash of all MVCC keys up to a given revision.",
+        "operationId": "HashKV",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/etcdserverpbHashRequest"
+              "$ref": "#/definitions/etcdserverpbHashKVRequest"
             }
           }
         ],
@@ -874,7 +874,7 @@
           "200": {
             "description": "(empty)",
             "schema": {
-              "$ref": "#/definitions/etcdserverpbHashResponse"
+              "$ref": "#/definitions/etcdserverpbHashKVResponse"
             }
           }
         }
@@ -929,6 +929,33 @@
             "description": "(empty)",
             "schema": {
               "$ref": "#/definitions/etcdserverpbStatusResponse"
+            }
+          }
+        }
+      }
+    },
+    "/v3alpha/maintenance/transfer-leadership": {
+      "post": {
+        "tags": [
+          "Maintenance"
+        ],
+        "summary": "MoveLeader requests current leader node to transfer its leadership to transferee.",
+        "operationId": "MoveLeader",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/etcdserverpbMoveLeaderRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "(empty)",
+            "schema": {
+              "$ref": "#/definitions/etcdserverpbMoveLeaderResponse"
             }
           }
         }
@@ -990,7 +1017,8 @@
         "VERSION",
         "CREATE",
         "MOD",
-        "VALUE"
+        "VALUE",
+        "LEASE"
       ]
     },
     "EventEventType": {
@@ -1444,6 +1472,11 @@
           "type": "string",
           "format": "byte"
         },
+        "lease": {
+          "description": "lease is the lease id of the given key.",
+          "type": "string",
+          "format": "int64"
+        },
         "mod_revision": {
           "description": "mod_revision is the last modified revision of the given key.",
           "type": "string",
@@ -1525,6 +1558,34 @@
         }
       }
     },
+    "etcdserverpbHashKVRequest": {
+      "type": "object",
+      "properties": {
+        "revision": {
+          "description": "revision is the key-value store revision for the hash operation.",
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "etcdserverpbHashKVResponse": {
+      "type": "object",
+      "properties": {
+        "compact_revision": {
+          "description": "compact_revision is the compacted revision of key-value store when hash begins.",
+          "type": "string",
+          "format": "int64"
+        },
+        "hash": {
+          "description": "hash is the hash value computed from the responding member's MVCC keys up to a given revision.",
+          "type": "integer",
+          "format": "int64"
+        },
+        "header": {
+          "$ref": "#/definitions/etcdserverpbResponseHeader"
+        }
+      }
+    },
     "etcdserverpbHashRequest": {
       "type": "object"
     },
@@ -1532,7 +1593,7 @@
       "type": "object",
       "properties": {
         "hash": {
-          "description": "hash is the hash value computed from the responding member's key-value store.",
+          "description": "hash is the hash value computed from the responding member's KV's backend.",
           "type": "integer",
           "format": "int64"
         },
@@ -1800,6 +1861,24 @@
           "items": {
             "$ref": "#/definitions/etcdserverpbMember"
           }
+        }
+      }
+    },
+    "etcdserverpbMoveLeaderRequest": {
+      "type": "object",
+      "properties": {
+        "targetID": {
+          "description": "targetID is the node ID for the new leader.",
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "etcdserverpbMoveLeaderResponse": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "$ref": "#/definitions/etcdserverpbResponseHeader"
         }
       }
     },
@@ -2177,7 +2256,7 @@
           "format": "boolean"
         },
         "compact_revision": {
-          "description": "compact_revision is set to the minimum index if a watcher tries to watch\nat a compacted index.\n\nThis happens when creating a watcher at a compacted revision or the watcher cannot\ncatch up with the progress of the key-value store. \n\nThe client should treat the watcher as canceled and should not try to create any\nwatcher with the same start_revision again.",
+          "description": "compact_revision is set to the minimum index if a watcher tries to watch\nat a compacted index.\n\nThis happens when creating a watcher at a compacted revision or the watcher cannot\ncatch up with the progress of the key-value store.\n\nThe client should treat the watcher as canceled and should not try to create any\nwatcher with the same start_revision again.",
           "type": "string",
           "format": "int64"
         },
